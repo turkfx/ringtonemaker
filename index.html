@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0b0e14">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>RingBell Stüdyo — iPhone Tarzı Zil Üretici</title>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/lamejs/1.2.0/lame.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{background:radial-gradient(1000px 500px at 50% -10%,#1c2b4a,#0b0e14 65%),#0b0e14;color:#e8ecf1;font-family:'Segoe UI',system-ui,Arial,sans-serif;touch-action:manipulation;min-height:100vh;min-height:100dvh;-webkit-tap-highlight-color:transparent}
+header{background:linear-gradient(90deg,#00c9a7,#0080ff,#8e2bff);padding:12px 16px;padding-top:calc(12px + env(safe-area-inset-top));position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-content:space-between;gap:10px}
+header h1{font-size:18px;color:#fff}
+header p{font-size:11px;color:#fff;opacity:.92}
+main{max-width:760px;margin:0 auto;padding:12px;padding-bottom:calc(12px + env(safe-area-inset-bottom));display:grid;gap:10px;width:100%}
+.panel{background:#121826;border:1px solid #232f47;border-radius:12px;padding:12px}
+.panel h2{font-size:13px;letter-spacing:1px;text-transform:uppercase;color:#8ee6ff;margin-bottom:8px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+button{cursor:pointer;border:none;border-radius:8px;padding:10px 14px;font-weight:700;font-size:13px;touch-action:manipulation}
+.btn-go{background:linear-gradient(90deg,#00c9a7,#0080ff);color:#fff;font-size:15px;padding:14px 18px}
+.btn-play{background:#00e5ff;color:#003138}
+.btn-stop{background:#39424e;color:#fff}
+.btn-dl{background:#ffea00;color:#222}
+.btn-ghost{background:#1a2230;color:#dbe4f0;border:1px solid #31405a}
+.badge{font-size:12px;background:#1a2230;border:1px solid #31405a;padding:5px 10px;border-radius:16px;display:inline-flex;gap:6px;align-items:center}
+select{background:#1a2230;color:#fff;border:1px solid #31405a;border-radius:6px;padding:7px;font-size:13px}
+input[type=range]{accent-color:#00e5ff}
+.status{font-size:12px;color:#8ee6ff}
+.kbd-map{font-size:11px;color:#9fb3cc;line-height:1.7}
+#toast{position:fixed;bottom:calc(14px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);background:#111c2e;border:1px solid #00e5ff;color:#fff;padding:9px 14px;border-radius:10px;font-size:13px;display:none;z-index:99;max-width:92vw;text-align:center}
+.progress{height:8px;background:#1a2230;border-radius:10px;overflow:hidden;margin-top:8px}
+.progress div{height:100%;width:0;background:linear-gradient(90deg,#00e5ff,#8e2bff)}
+button{min-height:44px}
+select{min-height:44px;max-width:100%}
+input[type=range]{min-height:44px;min-width:70px}
+input[type=range]::-webkit-slider-thumb{width:22px;height:22px}
+.badge{max-width:100%}
+select{max-width:46vw}
+@media(max-width:640px){
+ button{padding:12px 15px;font-size:16px}
+ select{font-size:16px}
+ .btn-go{width:100%}
+ #genBtn,#vivaldiBtn,#mozartBtn,#playBtn,#wavBtn,#mp3Btn{flex:1 1 46%}
+ #genBtn{flex-basis:100%}
+ .badge{font-size:13px}
+ input[type=range]{flex:1}
+}
+</style>
+</head>
+<body>
+<header><div><h1>📲 RingBell Stüdyo</h1><p>iPhone tarzı zil üret • önizle • WAV/MP3 indir (telefona zil yap)</p></div><div><button id="langBtn" class="btn-ghost">🇬🇧 EN</button></div></header>
+<main>
+<div class="panel"><h2>🎼 Zil Tasarla</h2>
+<div class="row">
+<span class="badge">Tarz <select id="style"><option value="marimba">Marimba (klasik)</option><option value="xylo">Xylophone</option><option value="arp">Arpej</option><option value="strum">Strum (gitar)</option><option value="timba">Timba</option><option value="alarm">Alarm</option><option value="chimes">Çanlar</option><option value="crystals">Kristal</option><option value="uplift">Yükseliş</option><option value="nightowl">Gece</option><option value="ripples">Dalga</option><option value="signal">Sinyal</option><option value="presto">Presto</option><option value="hillside">Kır</option><option value="cosmic">Kozmik</option><option value="twinkle">Pırıltı</option><option value="lullaby">Ninni</option><option value="violin">Keman (solo)</option><option value="vivaldi">Vivaldi (barok)</option><option value="mozart">Mozart (klasik)</option></select></span>
+<span class="badge">Ton <select id="key"><option value="0">Do (C)</option><option value="2">Re (D)</option><option value="4">Mi (E)</option><option value="5">Fa (F)</option><option value="7">Sol (G)</option><option value="9">La (A)</option></select></span>
+<span class="badge">Tempo <input type="range" id="tempo" min="90" max="150" value="112" style="width:90px"> <b id="tempoV">112</b></span>
+<span class="badge">Süre <select id="dur"><option value="4">4 sn</option><option value="8" selected>8 sn</option></select></span>
+<span class="badge">Bölge <select id="region"><option value="kapali">Kapalı</option><option value="turk">Türk</option><option value="arap">Arap</option><option value="balkan">Balkan</option><option value="hint">Hint</option><option value="ispanyol">İspanyol</option><option value="japon">Japon</option><option value="afrika">Afrika</option><option value="latin">Latin</option></select></span>
+</div>
+<div class="row" style="margin-top:10px">
+<button id="genBtn" class="btn-go">🎲 Zil Üret</button>
+<button id="vivaldiBtn" class="btn-ghost">🎻 Vivaldi Üret</button>
+<button id="mozartBtn" class="btn-ghost">🎹 Mozart Üret</button>
+<button id="playBtn" class="btn-play">▶ Önizle</button>
+<button id="wavBtn" class="btn-dl">⬇ WAV</button>
+<button id="mp3Btn" class="btn-dl">⬇ MP3</button>
+</div>
+<div class="progress"><div id="mp3prog"></div></div>
+<p class="status" id="info">hazır — Üret'e bas, her basışta yeni zil</p>
+<p class="kbd-map" id="notes"></p>
+</div>
+<div class="panel"><h2>🎛 Pro FX <span class="status">önizleme + indirmede geçerli</span></h2>
+<div class="row">
+<span class="badge">Delay <select id="fxDlyT" class="fxk"><option value="8">1/8</option><option value="8." selected>noktalı 1/8</option><option value="4">1/4</option></select> <input type="range" id="fxDlyM" class="fxk" min="0" max="70" value="18" style="width:55px"> FB <input type="range" id="fxDlyF" class="fxk" min="0" max="70" value="32" style="width:45px"></span>
+<span class="badge">Reverb <select id="fxRevS" class="fxk"><option value="s">Oda</option><option value="l" selected>Salon</option></select> <input type="range" id="fxRevM" class="fxk" min="0" max="70" value="22" style="width:55px"></span>
+<span class="badge">Chorus <input type="range" id="fxChoM" class="fxk" min="0" max="70" value="0" style="width:55px"></span>
+<span class="badge">Tremolo <select id="fxTreR" class="fxk"><option value="4">4Hz</option><option value="8">8Hz</option></select> <input type="range" id="fxTreD" class="fxk" min="0" max="90" value="0" style="width:55px"></span>
+<span class="badge">Drive <input type="range" id="fxDist" class="fxk" min="0" max="60" value="0" style="width:55px"></span>
+<span class="badge">Crush <select id="fxBit" class="fxk"><option value="off">Kapalı</option><option value="8">8bit</option><option value="6">6bit</option><option value="4">4bit</option></select></span>
+<span class="badge">LP <input type="range" id="fxLP" class="fxk" min="2000" max="20000" value="20000" style="width:65px"></span>
+<span class="badge">HP <input type="range" id="fxHP" class="fxk" min="10" max="4000" value="10" style="width:65px"></span>
+<span class="badge">PingPong <input type="range" id="fxPPM" class="fxk" min="0" max="70" value="0" style="width:55px"></span>
+<span class="badge">Flanger <input type="range" id="fxFlaM" class="fxk" min="0" max="70" value="0" style="width:55px"></span>
+</div>
+<p class="kbd-map">10 FX + master kompresör (sürekli açık): delay • reverb • chorus • tremolo • distortion • bitcrush • lowpass • highpass • ping-pong • flanger. Hepsi kapalıysa sinyal temiz geçer; düğmeler çalarken de işler.</p>
+</div>
+<div class="panel"><h2>❓ Telefona zil yapma</h2>
+<p class="kbd-map">1) Tarz+ton seç → <b>Zil Üret</b> → <b>Önizle</b> ile dinle 2) Beğenmediysen tekrar Üret (her seferinde yeni melodi) 3) <b>WAV/MP3 indir</b> → dosyayı telefona gönder:<br>• <b>iPhone:</b> MP3'ü GarageBand ile zil yap (uzantıyı .m4r yapıp Finder/iTunes ile eşitle) veya 30 sn altı MP3'ü doğrudan zil uygulamalarıyla ata.<br>• <b>Android:</b> indirilen dosyayı Ayarlar → Ses → Zil sesi'nden seç.</p></div>
+</main>
+<div id="toast"></div>
+<script>
+let LANG='tr';
+const TR2EN={
+'RingBell Stüdyo — iPhone Tarzı Zil Üretici':'RingBell Studio — iPhone-Style Ringtone Maker',
+'📲 RingBell Stüdyo':'📲 RingBell Studio',
+'iPhone tarzı zil üret • önizle • WAV/MP3 indir (telefona zil yap)':'Make iPhone-style ringtones • preview • download WAV/MP3',
+'🎼 Zil Tasarla':'🎼 Design Ringtone',
+'Tarz':'Style',
+'Marimba (klasik)':'Marimba (classic)',
+'Xylophone':'Xylophone',
+'Arpej':'Arpeggio',
+'Strum (gitar)':'Strum (guitar)',
+'Timba':'Timba',
+'Alarm':'Alarm',
+'Çanlar':'Bells',
+'Kristal':'Crystal',
+'Yükseliş':'Uplift',
+'Gece':'Night',
+'Dalga':'Waves',
+'Sinyal':'Signal',
+'Presto':'Presto',
+'Kır':'Hillside',
+'Kozmik':'Cosmic',
+'Pırıltı':'Twinkle',
+'Ninni':'Lullaby',
+'Ton':'Key',
+'Do (C)':'C',
+'Re (D)':'D',
+'Mi (E)':'E',
+'Fa (F)':'F',
+'Sol (G)':'G',
+'La (A)':'A',
+'Tempo':'Tempo',
+'Süre':'Length',
+'4 sn':'4s',
+'8 sn':'8s',
+'Bölge':'Region',
+'Kapalı':'Off',
+'Türk':'Turkish',
+'Arap':'Arabic',
+'Balkan':'Balkan',
+'Hint':'Indian',
+'İspanyol':'Spanish',
+'Japon':'Japanese',
+'Afrika':'African',
+'Latin':'Latin',
+'🎲 Zil Üret':'🎲 Make Ringtone',
+'▶ Önizle':'▶ Preview',
+'⏸ Durdur':'⏸ Stop',
+'⬇ WAV':'⬇ WAV',
+'⬇ MP3':'⬇ MP3',
+'hazır — Üret\'e bas, her basışta yeni zil':'ready — press Make, a new ringtone every time',
+'❓ Telefona zil yapma':'❓ Set as phone ringtone',
+'🎛 Pro FX':'🎛 Pro FX',
+'önizleme + indirmede geçerli':'applies to preview + downloads',
+'Delay':'Delay',
+'noktalı 1/8':'dotted 1/8',
+'1/8':'1/8',
+'1/4':'1/4',
+'Reverb':'Reverb',
+'Oda':'Room',
+'Salon':'Hall',
+'Chorus':'Chorus',
+'Tremolo':'Tremolo',
+'4Hz':'4Hz',
+'8Hz':'8Hz',
+'Drive':'Drive',
+'Crush':'Crush',
+'8bit':'8bit',
+'6bit':'6bit',
+'4bit':'4bit',
+'LP':'LP',
+'HP':'HP',
+'PingPong':'PingPong',
+'Flanger':'Flanger',
+'10 FX + master kompresör (sürekli açık): delay • reverb • chorus • tremolo • distortion • bitcrush • lowpass • highpass • ping-pong • flanger. Hepsi kapalıysa sinyal temiz geçer.':'10 FX + master compressor (always on): delay • reverb • chorus • tremolo • distortion • bitcrush • lowpass • highpass • ping-pong • flanger. With all off the signal stays clean.',
+'📲 Zil üretildi — Önizle ile dinle':'📲 Ringtone made — preview it',
+'Önce Zil Üret':'Make a ringtone first',
+'WAV indirildi ✔':'WAV downloaded ✔',
+'MP3 indirildi ✔':'MP3 downloaded ✔',
+'MP3 motoru yok (internet gerekli) — WAV indir':'No MP3 engine (needs internet) — download WAV',
+'Önizleniyor (döngü) — beğenmezsen tekrar Üret':'Previewing (loop) — press Make again if you dislike it'
+};
+function normTr(s){return (s||'').trim().replace(/\s+/g,' ');}
+function trNodeText(n){
+ const t=n.nodeValue;if(!t||!t.trim())return false;
+ if(LANG==='en'){
+  if(n._tr===undefined)n._tr=t;
+  const k=normTr(t),en=TR2EN[k];
+  if(en&&t.indexOf(en)<0){n.nodeValue=t.replace(t.trim(),en);return true;}
+ }else if(n._tr!==undefined){n.nodeValue=n._tr;}
+ return false;
+}
+function applyLang(l){
+ LANG=l;
+ const walker=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);
+ const ns=[];while(walker.nextNode())ns.push(walker.currentNode);
+ ns.forEach(trNodeText);
+ if(document.title){if(l==='en'){if(!document.title._tr)document.title._tr=document.title;const k=normTr(document.title);if(TR2EN[k])document.title=TR2EN[k];}else if(document.title._tr)document.title=document.title._tr;}
+ document.documentElement.lang=l;
+ const b=document.getElementById('langBtn');if(b)b.textContent=l==='en'?'🇹🇷 TR':'🇬🇧 EN';
+ try{localStorage.setItem('rblang',l);}catch(e){}
+ toast(l==='en'?'Language: English':'Dil: Türkçe');
+}
+let langLock=false;
+const langObs=new MutationObserver(muts=>{
+ if(LANG!=='en'||langLock)return;
+ langLock=true;
+ try{
+  muts.forEach(m=>{
+   if(m.type==='characterData')trNodeText(m.target);
+   else if(m.type==='childList')m.addedNodes.forEach(nd=>{if(nd.nodeType===3)trNodeText(nd);});
+  });
+ }finally{langLock=false;}
+});
+try{langObs.observe(document.body,{childList:true,characterData:true,subtree:true});}catch(e){}
+document.getElementById('langBtn').onclick=()=>applyLang(LANG==='en'?'tr':'en');
+try{if(localStorage.getItem('rblang')==='en')applyLang('en');}catch(e){}
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.style.display='block';clearTimeout(t._h);t._h=setTimeout(()=>t.style.display='none',2600);}
+const N=m=>440*Math.pow(2,(m-69)/12);
+const NAMES=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+const midiName=m=>NAMES[m%12]+(Math.floor(m/12)-1);
+let AC=null,ring=null,previewOn=false,previewTimer=null,previewIdx=0,previewNext=0;
+function ac(){if(!AC)AC=new (window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume();return AC;}
+/* --- tınılar (canlı + offline ctx ile çalışır) --- */
+function pluckEnv(c,dest,t,peak,dec){
+ const gn=c.createGain();gn.connect(dest);
+ gn.gain.setValueAtTime(.0001,t);
+ gn.gain.linearRampToValueAtTime(Math.max(.0001,peak),t+.004);
+ gn.gain.exponentialRampToValueAtTime(.0001,t+dec);
+ return gn;
+}
+function marimbaNote(c,dest,t,f,vel){
+ [[1,1,.5],[4,.32,.16],[10,.08,.06]].forEach(([m,g,dec])=>{
+  if(f*m>14000)return;
+  const o=c.createOscillator(),gn=pluckEnv(c,dest,t,g*vel,dec*3.2);
+  o.type='sine';o.frequency.value=f*m;o.connect(gn);
+  o.start(t);o.stop(t+dec*3.2+.05);});
+}
+function xyloNote(c,dest,t,f,vel){
+ [[1,1,.32],[3,.28,.12],[6,.08,.05]].forEach(([m,g,dec])=>{
+  if(f*m>14000)return;
+  const o=c.createOscillator(),gn=pluckEnv(c,dest,t,g*vel,dec*3.2);
+  o.type='sine';o.frequency.value=f*m;o.connect(gn);
+  o.start(t);o.stop(t+dec*3.2+.05);});
+}
+function bellNote(c,dest,t,f,vel,dec){
+ dec=dec||.8;
+ [[1,.55],[2.4,.22],[4.1,.06]].forEach(([m,g])=>{
+  if(f*m>14000)return;
+  const o=c.createOscillator(),gn=pluckEnv(c,dest,t,g*vel,dec);
+  o.type='sine';o.frequency.value=f*m;o.connect(gn);
+  o.start(t);o.stop(t+dec+.05);});
+}
+function ksBuffer(c,freq,dur){
+ const sr=c.sampleRate,N=Math.max(2,Math.round(sr/freq)),len=Math.max(N+1,Math.floor(sr*dur));
+ const b=c.createBuffer(1,len,sr),d=b.getChannelData(0);
+ for(let i=0;i<N;i++)d[i]=Math.random()*2-1;
+ for(let i=N;i<len;i++)d[i]=(d[i-N]+d[i-N+1])*.5*.9965;
+ return b;
+}
+function strumNote(c,dest,t,f,vel){
+ const s=c.createBufferSource();s.buffer=ksBuffer(c,f,1.4);
+ const g=c.createGain(),f2=c.createBiquadFilter();
+ f2.type='lowpass';f2.frequency.value=5200;
+ s.connect(f2);f2.connect(g);g.connect(dest);
+ g.gain.setValueAtTime(.0001,t);
+ g.gain.linearRampToValueAtTime(.5*vel,t+.005);
+ g.gain.exponentialRampToValueAtTime(.0001,t+1.3);
+ s.start(t);s.stop(t+1.4);
+}
+/* --- keman / viyolonsel (testere + vibrato + yay zarfı, kliksiz) --- */
+function violinNote(c,dest,t,f,vel,dur,bass){
+ dur=Math.max(.22,dur||.5);
+ const peak=(bass?.30:.30)*vel;
+ const atk=bass?.06:.045, rel=Math.min(.28,dur*.45);
+ const o=c.createOscillator();o.type='sawtooth';o.frequency.value=f;
+ const vib=c.createOscillator();vib.frequency.value=bass?4.5:5.6;
+ const vibG=c.createGain();vibG.gain.value=f*.006;
+ vib.connect(vibG);vibG.connect(o.frequency);
+ const flt=c.createBiquadFilter();flt.type='lowpass';flt.Q.value=.7;
+ flt.frequency.value=bass?Math.min(2500,Math.max(900,f*2.5)):Math.min(6200,Math.max(1800,f*3));
+ const g=c.createGain();
+ o.connect(flt);flt.connect(g);g.connect(dest);
+ g.gain.setValueAtTime(.0001,t);
+ g.gain.linearRampToValueAtTime(Math.max(.0001,peak),t+atk);
+ g.gain.setValueAtTime(Math.max(.0001,peak),t+Math.max(atk,dur-rel));
+ g.gain.exponentialRampToValueAtTime(.0001,t+dur+rel);
+ o.start(t);o.stop(t+dur+rel+.05);
+ vib.start(t);vib.stop(t+dur+rel+.05);
+}
+/* --- piyano / fortepiano (Mozart için, kliksiz) --- */
+function pianoNote(c,dest,t,f,vel,dur){
+ dur=Math.max(.28,dur||.5);
+ const dec=dur+.7;
+ [[1,.5,'triangle'],[2,.16,'sine'],[3,.08,'sine']].forEach(([m,g,ty])=>{
+  if(f*m>14000)return;
+  const o=c.createOscillator(),gn=pluckEnv(c,dest,t,g*vel,dec);
+  o.type=ty;o.frequency.value=f*m;o.connect(gn);
+  o.start(t);o.stop(t+dec+.05);});
+}
+/* --- etnik perküsyon (canlı + offline ctx ile çalışır) --- */
+function noiseBuf(c,sec){
+ sec=sec||.3;
+ const k='_nz_'+sec+'_'+c.sampleRate;
+ if(c[k])return c[k];
+ const len=Math.max(1,Math.floor(c.sampleRate*sec)),b=c.createBuffer(1,len,c.sampleRate),d=b.getChannelData(0);
+ for(let i=0;i<len;i++)d[i]=Math.random()*2-1;
+ c[k]=b;return b;
+}
+function percNote(c,dest,t,kind,vel){
+ if(kind==='dum'){const o=c.createOscillator(),g=c.createGain();o.type='sine';o.frequency.setValueAtTime(150,t);o.frequency.exponentialRampToValueAtTime(55,t+.12);o.connect(g);g.connect(dest);g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(.6*vel,t+.004);g.gain.exponentialRampToValueAtTime(.001,t+.2);o.start(t);o.stop(t+.25);}
+ else if(kind==='tek'){const n=c.createBufferSource();n.buffer=noiseBuf(c,.3);const f=c.createBiquadFilter(),g=c.createGain();f.type='bandpass';f.frequency.value=3200;f.Q.value=1.5;n.connect(f);f.connect(g);g.connect(dest);g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(.4*vel,t+.003);g.gain.exponentialRampToValueAtTime(.001,t+.09);n.start(t);n.stop(t+.12);const o=c.createOscillator(),og=c.createGain();o.type='sine';o.frequency.value=760;o.connect(og);og.connect(dest);og.gain.setValueAtTime(.0001,t);og.gain.linearRampToValueAtTime(.25*vel,t+.003);og.gain.exponentialRampToValueAtTime(.001,t+.07);o.start(t);o.stop(t+.1);}
+ else if(kind==='na'){const o=c.createOscillator(),g=c.createGain();o.type='sine';o.frequency.setValueAtTime(220,t);o.frequency.exponentialRampToValueAtTime(175,t+.15);o.connect(g);g.connect(dest);g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(.45*vel,t+.004);g.gain.exponentialRampToValueAtTime(.001,t+.2);o.start(t);o.stop(t+.25);}
+ else if(kind==='tin'){const o=c.createOscillator(),g=c.createGain();o.type='sine';o.frequency.value=560;o.connect(g);g.connect(dest);g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(.32*vel,t+.003);g.gain.exponentialRampToValueAtTime(.001,t+.12);o.start(t);o.stop(t+.15);}
+ else if(kind==='clap'){[0,.035].forEach(dt=>{const tt=t+dt,n=c.createBufferSource();n.buffer=noiseBuf(c,.2);const f=c.createBiquadFilter(),g=c.createGain();f.type='bandpass';f.frequency.value=1900;f.Q.value=1.2;n.connect(f);f.connect(g);g.connect(dest);g.gain.setValueAtTime(.0001,tt);g.gain.linearRampToValueAtTime(.4*vel,tt+.003);g.gain.exponentialRampToValueAtTime(.001,tt+.07);n.start(tt);n.stop(tt+.1);});}
+ else if(kind==='shk'){const n=c.createBufferSource();n.buffer=noiseBuf(c,.2);const f=c.createBiquadFilter(),g=c.createGain();f.type='highpass';f.frequency.value=7500;n.connect(f);f.connect(g);g.connect(dest);g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(.3*vel,t+.003);g.gain.exponentialRampToValueAtTime(.001,t+.06);n.start(t);n.stop(t+.09);}
+ else if(kind==='clv'){[[1800,.4,.06],[2700,.22,.04]].forEach(([fr,gg,dd])=>{const o=c.createOscillator(),g2=c.createGain();o.type='sine';o.frequency.value=fr;o.connect(g2);g2.connect(dest);g2.gain.setValueAtTime(.0001,t);g2.gain.linearRampToValueAtTime(gg*vel,t+.002);g2.gain.exponentialRampToValueAtTime(.001,t+dd);o.start(t);o.stop(t+dd+.03);});}
+ else{const o=c.createOscillator(),g=c.createGain();o.type='sine';o.frequency.value=2500;o.connect(g);g.connect(dest);g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(.3*vel,t+.003);g.gain.exponentialRampToValueAtTime(.001,t+.05);o.start(t);o.stop(t+.08);}
+}
+/* --- beste (iPhone ruhu: neşeli majör, tekrarlı nakarat) --- */
+const MAJ=[0,2,4,5,7,9,11];
+const REGIONS={
+ kapali:{lbl:'Kapalı',scale:MAJ,perc:null},
+ turk:{lbl:'Türk',scale:[0,1,4,5,7,8,11],perc:['dum',0,'tek',0,'dum',0,'tek',0]},
+ arap:{lbl:'Arap',scale:[0,2,3,5,7,8,11],perc:['dum',0,'tek',0,'dum','tek','tek',0]},
+ balkan:{lbl:'Balkan',scale:[0,2,3,5,7,8,10],perc:['dum','tek',0,'tek','dum',0,'tek',0]},
+ hint:{lbl:'Hint',scale:[0,2,4,6,7,9,11],perc:['na',0,'tin',0,'na','tin','na',0]},
+ ispanyol:{lbl:'İspanyol',scale:[0,1,3,5,7,8,10],perc:[0,0,'clap',0,0,0,'clap',0]},
+ japon:{lbl:'Japon',scale:[0,1,5,7,8],perc:null,voice:'xylo'},
+ afrika:{lbl:'Afrika',scale:[0,2,4,7,9],perc:['shk',0,'shk',0,'shk',0,'shk','shk']},
+ latin:{lbl:'Latin',scale:[0,2,4,5,7,9,11],perc:['clv','shk','shk','clv','shk','shk','clv','shk']}
+};
+const STYLE_ENGINE={
+ marimba:{timbre:'marimba',oct:0,den:1},
+ xylo:{timbre:'xylo',oct:1,den:1},
+ timba:{timbre:'alt',oct:0,den:1},
+ alarm:{timbre:'bell',oct:0,den:1},
+ arp:{timbre:'bell',oct:0,den:1},
+ strum:{timbre:'strum',oct:0,den:1},
+ chimes:{timbre:'bell',oct:0,den:.55,dec:1.6},
+ crystals:{timbre:'xylo',oct:2,den:2,dec:.5},
+ uplift:{timbre:'marimba',oct:0,den:1.5},
+ nightowl:{timbre:'marimba',oct:-1,den:.55,soft:.6,layers:[{timbre:'bell',oct:0,vel:.35},{timbre:'bell',oct:1,vel:.4},{timbre:'xylo',oct:0,vel:.25}]},
+ ripples:{timbre:'xylo',oct:1,den:1,echo:true},
+ signal:{timbre:'bell',oct:1,den:1,dec:.5},
+ presto:{timbre:'marimba',oct:1,den:2},
+ hillside:{timbre:'marimba',oct:0,den:.55,soft:.7},
+ cosmic:{timbre:'bell',oct:1,den:.5,dec:2},
+ twinkle:{timbre:'xylo',oct:2,den:1.5,dec:.5},
+ lullaby:{timbre:'marimba',oct:-1,den:.6,soft:.65,dec:.8},
+ violin:{timbre:'violin',oct:0,den:1},
+ vivaldi:{timbre:'violin',oct:1,den:1,baroque:true},
+ mozart:{timbre:'piano',oct:0,den:1,classical:true}
+};
+/* --- Vivaldi tarzı barok üretim (ritornello + sekvens + continuo) --- */
+function buildVivaldi(keyPc,bpm,durSec){
+ const beat=60/bpm, root=60+keyPc;
+ const dg=d=>root+Math.floor(d/MAJ.length)*12+MAJ[((d%MAJ.length)+MAJ.length)%MAJ.length];
+ const evs=[];const put=(m,at,dur,v,timbre,extra)=>evs.push(Object.assign({m,at,dur,v:v*(.92+Math.random()*.16),timbre},extra||{}));
+ const prog=[0,4,5,2,5,0,3,4];
+ const arpPat=[0,2,4,7,9,7,4,2];
+ let motif=[0,2,4,7,9,7,4,2].map(x=>x+2+Math.floor(Math.random()*3));
+ motif=motif.map(x=>Math.max(0,Math.min(14,x)));
+ let t=0,bar=0;const end=durSec-.5;
+ let melT=0;
+ while(melT<end){
+  const ch=prog[bar%prog.length];
+  const isRet=bar%4<2;
+  for(let e=0;e<8;e++){
+   const at=melT+e*beat*.5;
+   if(at>=end)break;
+   let d;
+   if(isRet) d=motif[e%motif.length]+(bar>=4?2:0);
+   else d=ch+arpPat[(e+bar)%arpPat.length];
+   const m=dg(d)+12;
+   put(m,at,beat*.48,.8,'violin');
+   put(dg(d+2)+12,at,beat*.45,.28,'violin');
+   if(bar%4===3&&e>=6){
+    put(dg(d+1)+12,at+beat*.25,beat*.2,.5,'violin');
+   }
+  }
+  for(let b=0;b<4;b++){
+   const at=melT+b*beat;
+   if(at>=end)break;
+   put(dg(ch)-12,at,beat*.9,.5,'cello');
+   put(dg(ch+2)-12,at+beat*.5,beat*.4,.22,'marimba');
+   put(dg(ch+4),at+beat*.5,beat*.35,.18,'xylo');
+  }
+  melT+=4*beat;bar++;
+  if(bar>32)break;
+ }
+ if(evs.length){
+  const mel=evs.filter(e=>e.timbre==='violin').sort((a,b)=>a.at-b.at);
+  const last=mel.length?mel[mel.length-1]:evs[evs.length-1];
+  evs.push({m:root+24,at:last.at+last.dur+.05,dur:beat*1.6,v:.85,timbre:'violin'});
+  evs.push({m:root+12,at:last.at+last.dur+.05,dur:beat*1.6,v:.5,timbre:'cello'});
+ }
+ evs.sort((a,b)=>a.at-b.at);
+ return {evs,bpm,keyPc,dur:durSec,region:'kapali',baroque:true};
+}
+/* --- Mozart tarzı klasik üretim (zarif dönem + Alberti bas + soru-cevap) --- */
+function buildMozart(keyPc,bpm,durSec){
+ const beat=60/bpm, root=60+keyPc;
+ const dg=d=>root+Math.floor(d/MAJ.length)*12+MAJ[((d%MAJ.length)+MAJ.length)%MAJ.length];
+ const evs=[];const put=(m,at,dur,v,timbre,extra)=>evs.push(Object.assign({m,at,dur,v:v*(.92+Math.random()*.16),timbre},extra||{}));
+ const prog=[0,4,5,3,0,3,4,0];
+ let motif=[];let md=4+Math.floor(Math.random()*2);
+ for(let i=0;i<8;i++){if(i>0){const r=Math.random();md+=r<.65?(Math.random()<.5?-1:1)*(1+Math.floor(Math.random()*2)):(Math.random()<.5?-1:1)*(3+Math.floor(Math.random()*2));}md=Math.max(0,Math.min(14,md));motif.push(md);}
+ let melT=0,bar=0;const end=durSec-.5;
+ while(melT<end){
+  const ch=prog[bar%prog.length];
+  const phraseEnd=(bar%4===3);
+  for(let e=0;e<8;e++){
+   const at=melT+e*beat*.5;
+   if(at>=end)break;
+   if(phraseEnd&&e>=6){
+    if(e===6)put(dg(motif[0])+12,at,beat*1.2,.75,'piano');
+    continue;
+   }
+   let d=motif[e%motif.length]+(bar>=8?2:0);
+   if(bar%2===1)d=motif[(e+3)%motif.length];
+   const m=dg(d)+12;
+   put(m,at,beat*.46,.78,'piano');
+   if(bar>=4)put(dg(d+2)+12,at,beat*.42,.22,'violin');
+   if((bar%4===2||bar%4===0)&&e===0&&at>=beat*.25){
+    put(dg(d+1)+12,at-beat*.25,beat*.22,.5,'piano');
+   }
+  }
+  const alb=[0,4,2,4,0,4,2,4];
+  for(let e=0;e<8;e++){
+   const at=melT+e*beat*.5;
+   if(at>=end)break;
+   if(phraseEnd&&e>=6){
+    if(e===6){put(dg(ch)-12,at,beat*1.4,.4,'cello');}
+    continue;
+   }
+   put(dg(ch+alb[e])-12,at,beat*.42,.3,'piano',{dec:.5});
+   if(e%2===0)put(dg(ch)-24,at,beat*.4,.28,'cello');
+  }
+  melT+=4*beat;bar++;
+  if(bar>32)break;
+ }
+ if(evs.length){
+  const mel=evs.filter(e=>e.timbre==='piano').sort((a,b)=>a.at-b.at);
+  const last=mel.length?mel[mel.length-1]:evs[evs.length-1];
+  const fat=Math.min(durSec-.3,last.at+last.dur+.05);
+  evs.push({m:root+12,at:fat,dur:beat*1.6,v:.85,timbre:'piano',dec:1.4});
+  evs.push({m:root,at:fat,dur:beat*1.6,v:.45,timbre:'cello'});
+  evs.push({m:root+24,at:fat,dur:beat*1.4,v:.4,timbre:'violin'});
+ }
+ evs.sort((a,b)=>a.at-b.at);
+ return {evs,bpm,keyPc,dur:durSec,region:'kapali',classical:true};
+}
+function buildRing(style,keyPc,bpm,durSec,regionKey){
+ if(style==='vivaldi')return buildVivaldi(keyPc,bpm,durSec);
+ if(style==='mozart')return buildMozart(keyPc,bpm,durSec);
+ const RG=REGIONS[regionKey]||REGIONS.kapali;
+ const RSC=RG.scale,SL=RSC.length;
+ const beat=60/bpm,root=60+keyPc;
+ const dg2m=dg=>root+Math.floor(dg/SL)*12+RSC[((dg%SL)+SL)%SL];
+ const hook=[];let d=2+Math.floor(Math.random()*3);
+ for(let i=0;i<5;i++){if(i>0){const r=Math.random();d+=r<.7?(Math.random()<.5?-1:1)*(1+Math.floor(Math.random()*2)):(Math.random()<.5?-1:1)*3;}d=Math.max(0,Math.min(11,d));hook.push(d);}
+ const evs=[];let t=0;const end=durSec-.3;
+ const put=(m,at,dur,v,timbre,dec)=>evs.push({m,at,dur,v:(v||.9)*(.92+Math.random()*.16),timbre:timbre||style,dec:dec||0});
+ const CFG=STYLE_ENGINE[style]||STYLE_ENGINE.marimba;
+ const rhyA=[1,.5,.5,1,1,2],rhyB=[1,1,.5,.5,1,2];
+ let bar=0;
+ while(t<end){
+  const seq=bar%4===3?hook.slice().reverse():hook;
+  const rhy=bar%2?rhyB:rhyA;
+  for(let i=0;i<seq.length&&t<end;i++){
+   const beats=rhy[i%rhy.length];
+   const m=dg2m(seq[i]+(bar>=4?2:0))+(CFG.oct||0)*12;
+   const vv=.9*(CFG.soft||1);
+   if(style==='arp'){
+    [0,4,7].forEach((iv,k)=>put(m+iv,t+k*beat*.22,beat*.5,.7,'bell'));
+    t+=beats*beat;
+   }else if(style==='strum'){
+    if(i%2===0)[0,4,7].forEach((iv,k)=>put(m+iv,t+k*.03,beat*.9,.55,'strum'));
+    else put(m,t,beats*beat*.9,.8,'strum');
+    t+=beats*beat;
+   }else if(style==='alarm'){
+    put(m,t,beats*beat*.5,.95,'bell');put(m+12,t+beats*beat*.5,beats*beat*.4,.8,'bell');
+    t+=beats*beat;
+   }else{
+    if(CFG.den<1&&Math.random()>CFG.den){t+=beats*beat;continue;}
+     const tm=(RG.voice&&['arp','strum','alarm','violin','vivaldi','mozart'].indexOf(style)<0)?RG.voice:(CFG.timbre==='alt'?(i%2?'xylo':'marimba'):CFG.timbre);
+    put(m,t,beats*beat*.92,vv,tm,CFG.dec);
+    if(CFG.layers)CFG.layers.forEach(L=>put(m+(L.oct||0)*12,t,beats*beat*.9,vv*(L.vel||.4),L.timbre,CFG.dec));
+    if(CFG.echo)put(m,t+beats*beat*.5,beats*beat*.4,vv*.5,tm,CFG.dec);
+    if(CFG.den>1){const nx=CFG.den>=2?2:1;for(let e2=0;e2<nx;e2++)put(m+2,t+beats*beat*((e2+1)/(nx+1)),beats*beat*.35,vv*.6,tm,CFG.dec);}
+    t+=beats*beat;
+   }
+  }
+  bar++;
+  if(bar>32)break;
+ }
+ const leadTim=style==='strum'?'strum':(CFG.timbre==='alt'?'marimba':CFG.timbre);
+ if(RG.perc){const e8=beat/2,steps=Math.floor(durSec/e8);for(let s=0;s<steps;s++){const kd=RG.perc[s%RG.perc.length];if(!kd)continue;evs.push({m:60,at:s*e8,dur:.12,v:(s%4===0?.55:(kd==='shk'?.3:.42)),timbre:'perc',perc:kd});}}
+ if(evs.length){const mel=evs.filter(e=>e.timbre!=='perc').sort((a,b)=>a.at-b.at);const last=mel.length?mel[mel.length-1]:evs[evs.length-1];const fat=Math.min(durSec-.25,last.at+last.dur+.05);evs.push({m:root+12,at:fat,dur:beat*1.5,v:.85,timbre:leadTim,dec:1.6});}
+ evs.sort((a,b)=>a.at-b.at);
+ return {evs,bpm,keyPc,dur:durSec,region:regionKey||'kapali'};
+}
+function voiceFor(c,dest,ev){
+ const f=N(ev.m);
+ if(ev.timbre==='xylo')xyloNote(c,dest,ev.at,f,ev.v);
+ else if(ev.timbre==='bell')bellNote(c,dest,ev.at,f,ev.v,ev.dec||.7);
+ else if(ev.timbre==='strum')strumNote(c,dest,ev.at,f,ev.v);
+ else if(ev.timbre==='violin')violinNote(c,dest,ev.at,f,ev.v,ev.dur,false);
+ else if(ev.timbre==='cello')violinNote(c,dest,ev.at,f,ev.v,ev.dur,true);
+ else if(ev.timbre==='piano')pianoNote(c,dest,ev.at,f,ev.v,ev.dur);
+ else if(ev.timbre==='perc')percNote(c,dest,ev.at,ev.perc,ev.v);
+ else marimbaNote(c,dest,ev.at,f,ev.v);
+}
+/* --- üret + önizle + indir --- */
+let PV=null;
+function fxP(){const v=id=>{const el=document.getElementById(id);return el?(el.value||0):0;};return{dlyT:String(v('fxDlyT')||'8.'),dlyM:+v('fxDlyM')/100,dlyF:+v('fxDlyF')/100,revS:String(v('fxRevS')||'l'),revM:+v('fxRevM')/100,choM:+v('fxChoM')/100,treR:+(v('fxTreR')||4),treD:+v('fxTreD')/100,dist:+v('fxDist'),bit:String(v('fxBit')||'off'),lp:+v('fxLP')||20000,hp:+v('fxHP'),ppM:+v('fxPPM')/100,flaM:+v('fxFlaM')/100};}
+function beatDiv(bpm,div){const b=60/bpm;return div==='8.'?b*.75:(div==='4'?b:(div==='2'?b*2:b*.5));}
+function identityCurve(){const n=256,c=new Float32Array(n);for(let i=0;i<n;i++)c[i]=i/(n-1)*2-1;return c;}
+function distCurve(k){if(!(k>0.001))return identityCurve();const n=256,c=new Float32Array(n);for(let i=0;i<n;i++){const x=i/(n-1)*2-1;c[i]=Math.tanh(k*x);}return c;}
+function crushCurve(bits){const n=1024,c=new Float32Array(n),st=Math.pow(2,bits);for(let i=0;i<n;i++){const x=i/(n-1)*2-1;c[i]=Math.round(x*st)/st;}return c;}
+const _irCache={};
+function impResp(c,dur,dec){const key=c.sampleRate+'_'+dur+'_'+dec;if(_irCache[key]&&_irCache[key].ctx===c)return _irCache[key].buf;const r=Math.max(1,Math.floor(c.sampleRate*dur)),b=c.createBuffer(2,r,c.sampleRate);for(let ch=0;ch<2;ch++){const d=b.getChannelData(ch);for(let i=0;i<r;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/r,dec);}_irCache[key]={ctx:c,buf:b};return b;}
+function buildFXChain(c,input,output,bpm){
+ const P=fxP();
+ const comp=c.createDynamicsCompressor();comp.threshold.value=-18;comp.ratio.value=3;comp.attack.value=.005;comp.release.value=.2;const pres=c.createBiquadFilter();pres.type='highshelf';pres.frequency.value=8500;pres.gain.value=2;comp.connect(pres);pres.connect(output);
+ const pre=c.createGain();pre.gain.value=.8;pre.connect(comp);
+ const trem=c.createGain();trem.gain.value=1-P.treD/2;const trL=c.createOscillator();trL.frequency.value=P.treR;const trD=c.createGain();trD.gain.value=P.treD/2;trL.connect(trD);trD.connect(trem.gain);trem.connect(pre);trL.start();
+ const OS=(typeof OfflineAudioContext!=='undefined'&&c instanceof OfflineAudioContext)?'2x':'4x';
+ const sh=c.createWaveShaper();sh.oversample=OS;sh.curve=P.dist>0.5?distCurve(1+P.dist/12):identityCurve();
+ const bc=c.createWaveShaper();bc.oversample=OS;bc.curve=P.bit==='off'?identityCurve():crushCurve(+P.bit);
+ const lp=c.createBiquadFilter();lp.type='lowpass';lp.frequency.value=P.lp;
+ const hp=c.createBiquadFilter();hp.type='highpass';hp.frequency.value=Math.max(10,P.hp);
+ input.connect(lp);lp.connect(hp);hp.connect(sh);sh.connect(bc);bc.connect(trem);
+ const dly=c.createDelay(2);dly.delayTime.value=beatDiv(bpm,P.dlyT);
+ const fb=c.createGain();fb.gain.value=P.dlyF;dly.connect(fb);fb.connect(dly);
+ const dw=c.createGain();dw.gain.value=P.dlyM;dly.connect(dw);dw.connect(pre);
+ const ds=c.createGain();ds.gain.value=1;bc.connect(ds);ds.connect(dly);
+ const conv=c.createConvolver();conv.buffer=impResp(c,P.revS==='s'?1.2:2.8,P.revS==='s'?2.5:1.8);
+ const rw=c.createGain();rw.gain.value=P.revM;conv.connect(rw);rw.connect(pre);
+ const rs=c.createGain();rs.gain.value=1;bc.connect(rs);rs.connect(conv);
+ const chD=c.createDelay(2);chD.delayTime.value=.018;
+ const chL=c.createOscillator();chL.frequency.value=1.2;const chG=c.createGain();chG.gain.value=.004;
+ chL.connect(chG);chG.connect(chD.delayTime);
+ const cw=c.createGain();cw.gain.value=P.choM*.8;chD.connect(cw);cw.connect(pre);
+ const cs=c.createGain();cs.gain.value=1;bc.connect(cs);cs.connect(chD);chL.start();
+ const sp=c.createChannelSplitter(2),mg=c.createChannelMerger(2);
+ const pL=c.createDelay(2),pR=c.createDelay(2);
+ const bd=beatDiv(bpm,'8.');
+ pL.delayTime.value=bd;pR.delayTime.value=bd;
+ const ppF=c.createGain();ppF.gain.value=.35;
+ const ppW=c.createGain();ppW.gain.value=P.ppM;
+ bc.connect(sp);sp.connect(pL,0);
+ pL.connect(ppF);ppF.connect(pR);pR.connect(ppF);
+ pL.connect(mg,0,0);pR.connect(mg,0,1);mg.connect(ppW);ppW.connect(pre);
+ const fD=c.createDelay(2);fD.delayTime.value=.005;
+ const fL=c.createOscillator();fL.frequency.value=.25;const fG=c.createGain();fG.gain.value=.0035;
+ fL.connect(fG);fG.connect(fD.delayTime);
+ const fF=c.createGain();fF.gain.value=.45;fD.connect(fF);fF.connect(fD);
+ const fw=c.createGain();fw.gain.value=P.flaM;fD.connect(fw);fw.connect(pre);
+ const fs2=c.createGain();fs2.gain.value=1;bc.connect(fs2);fs2.connect(fD);fL.start();
+ return {c,bpm,revS:P.revS,sh,bc,lp,hp,dly,fb,dw,conv,rw,chD,cw,trL,trD,trem,pre,pL,pR,ppW,fD,fw};
+}
+function tweakFX(){
+ if(!PV||!PV.c)return;
+ const P=fxP();
+ try{
+  PV.sh.curve=P.dist>0.5?distCurve(1+P.dist/12):identityCurve();
+  PV.bc.curve=P.bit==='off'?identityCurve():crushCurve(+P.bit);
+  PV.lp.frequency.value=P.lp;PV.hp.frequency.value=Math.max(10,P.hp);
+  PV.dly.delayTime.value=beatDiv(PV.bpm,P.dlyT);PV.fb.gain.value=P.dlyF;PV.dw.gain.value=P.dlyM;
+  if(P.revS!==PV.revS){PV.conv.buffer=impResp(PV.c,P.revS==='s'?1.2:2.8,P.revS==='s'?2.5:1.8);PV.revS=P.revS;}
+  PV.rw.gain.value=P.revM;
+  PV.cw.gain.value=P.choM*.8;
+  PV.trL.frequency.value=P.treR;PV.trD.gain.value=P.treD/2;if(PV.trem)PV.trem.gain.value=1-P.treD/2;
+  const bd=beatDiv(PV.bpm,'8.');PV.pL.delayTime.value=bd;PV.pR.delayTime.value=bd;PV.ppW.gain.value=P.ppM;
+  PV.fw.gain.value=P.flaM;
+ }catch(e){}
+}
+function genRing(){
+ const style=document.getElementById('style').value;
+ const keyPc=+document.getElementById('key').value||0;
+ const bpm=+document.getElementById('tempo').value||112;
+ const durSec=+document.getElementById('dur').value||8;
+ document.getElementById('tempoV').textContent=bpm;
+ stopPreview();
+ const rg=document.getElementById('region').value||'kapali';
+ ring=buildRing(style,keyPc,bpm,durSec,rg);
+ const rLbl=(REGIONS[ring.region]||REGIONS.kapali).lbl;
+ const extra=ring.baroque?' • keman+viyolonsel+continuo':(ring.classical?' • piyano+alberti bas':'');
+ document.getElementById('info').textContent=style+' • '+NAMES[keyPc]+' • '+rLbl+' • '+bpm+' BPM • '+ring.evs.length+' nota'+extra;
+ document.getElementById('notes').textContent=[...new Set(ring.evs.map(e=>midiName(e.m)))].join(' ');
+ toast('📲 Zil üretildi — Önizle ile dinle');
+}
+let pvList=[],pvIdx=0,pvT0=0;
+function stopPreview(){previewOn=false;if(previewTimer)clearInterval(previewTimer);previewTimer=null;if(window._pvM){try{window._pvM.disconnect();}catch(e){}window._pvM=null;}PV=null;const b=document.getElementById('playBtn');if(b)b.textContent='▶ Önizle';}
+document.querySelectorAll('.fxk').forEach(el=>{el.addEventListener('input',tweakFX);el.addEventListener('change',tweakFX);});
+['style','key','tempo','dur','region'].forEach(id=>{const el=document.getElementById(id);if(!el)return;const h=()=>{clearTimeout(window._rgT);window._rgT=setTimeout(()=>{const was=previewOn;genRing();if(was)togglePreview();},350);};el.addEventListener('input',h);el.addEventListener('change',h);});
+function togglePreview(){
+ if(!ring){toast('Önce Zil Üret');return;}
+ if(previewOn){stopPreview();return;}
+ const c=ac();
+ if(window._pvM)try{window._pvM.disconnect();}catch(e){}
+ const pvM=c.createGain();pvM.gain.value=.9;window._pvM=pvM;
+ PV=buildFXChain(c,pvM,c.destination,ring.bpm);
+ previewOn=true;
+ pvList=ring.evs.slice().sort((a,b)=>a.at-b.at);pvIdx=0;pvT0=c.currentTime+.1;
+ document.getElementById('playBtn').textContent='⏸ Durdur';
+ previewTimer=setInterval(()=>{
+  if(!previewOn)return;
+  for(let k=0;k<200;k++){
+   if(!pvList.length)break;
+   const ev=pvList[pvIdx],when=pvT0+ev.at;
+   if(when>c.currentTime+.3)break;
+   if(when<c.currentTime-.15){pvIdx++;if(pvIdx>=pvList.length){pvIdx=0;pvT0+=ring.dur;}continue;}
+   voiceFor(c,pvM,Object.assign({},ev,{at:Math.max(when,c.currentTime+.01)}));
+   pvIdx++;
+   if(pvIdx>=pvList.length){pvIdx=0;pvT0+=ring.dur;}
+  }
+ },80);
+ toast('Önizleniyor (döngü) — beğenmezsen tekrar Üret');
+}
+function wavEncode(buf){
+ const n=buf.length,ch=Math.min(2,buf.numberOfChannels),sr=buf.sampleRate;
+ const len=n*ch*2+44,ab=new ArrayBuffer(len),v=new DataView(ab);
+ const ws=(o,s)=>{for(let i=0;i<s.length;i++)v.setUint8(o+i,s.charCodeAt(i));};
+ ws(0,'RIFF');v.setUint32(4,len-8,true);ws(8,'WAVEfmt ');v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,ch,true);v.setUint32(24,sr,true);v.setUint32(28,sr*ch*2,true);v.setUint16(32,ch*2,true);v.setUint16(34,16,true);ws(36,'data');v.setUint32(40,n*ch*2,true);
+ const chs=[];for(let c=0;c<ch;c++)chs.push(buf.getChannelData(c));
+ let o=44;
+ for(let i=0;i<n;i++)for(let c=0;c<ch;c++){v.setInt16(o,Math.max(-1,Math.min(1,chs[c][i]))*32767,true);o+=2;}
+ return new Blob([ab],{type:'audio/wav'});
+}
+function infoErr(m){toast(m);try{document.getElementById('info').textContent=m;}catch(e){}}
+async function renderRing(){
+ if(!ring){toast('Önce Zil Üret');return null;}
+ if(typeof OfflineAudioContext==='undefined'){infoErr('Hata: bu tarayıcı OfflineAudioContext desteklemiyor (Chrome/Edge kullan)');return null;}
+ const sr=44100,tail=2.2;
+ const doRender=withFX=>{
+  const oc=new OfflineAudioContext(2,Math.ceil(sr*(ring.dur+tail)),sr);
+  const master=oc.createGain();master.gain.value=.7;
+  if(withFX)buildFXChain(oc,master,oc.destination,ring.bpm);
+  else master.connect(oc.destination);
+  ring.evs.forEach(ev=>{if(ev.at<0||ev.dur<=0)return;voiceFor(oc,master,ev);});
+  return oc.startRendering();
+ };
+ const timeout=ms=>new Promise((_,rej)=>setTimeout(()=>rej(new Error('zaman-aşımı')),ms));
+ try{
+  return await Promise.race([doRender(true),timeout(25000)]);
+ }catch(err){
+  if(err&&err.message==='zaman-aşımı'){
+   infoErr('Render 25 sn’yi aştı — FX’siz hızlı render deneniyor…');
+   try{return await doRender(false);}
+   catch(err2){infoErr('Hızlı render da başarısız: '+(err2&&err2.message?err2.message:err2));return null;}
+  }
+  infoErr('Render hatası: '+(err&&err.message?err.message:err));
+  return null;
+ }
+}
+document.getElementById('genBtn').onclick=genRing;
+document.getElementById('vivaldiBtn').onclick=()=>{document.getElementById('style').value='vivaldi';genRing();toast('🎻 Barok Vivaldi üretildi — keman + continuo');};
+document.getElementById('mozartBtn').onclick=()=>{document.getElementById('style').value='mozart';genRing();toast('🎹 Klasik Mozart üretildi — piyano + alberti bas');};
+document.getElementById('playBtn').onclick=togglePreview;
+document.getElementById('tempo').addEventListener('input',e=>{document.getElementById('tempoV').textContent=e.target.value;});
+function dlBlob(blob,name){
+ try{
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download=name;a.rel='noopener';
+  a.style.display='none';document.body.appendChild(a);
+  a.dispatchEvent(new MouseEvent('click',{bubbles:true,cancelable:true,view:window}));
+  setTimeout(()=>{a.remove();URL.revokeObjectURL(url);},8000);
+  if(/iPhone|iPad|iPod/i.test(navigator.userAgent))toast('iOS: dosya yeni sekmede açılırsa Paylaş → Dosyalara Kaydet yap');
+  return true;
+ }catch(err){
+  toast('İndirme hatası: '+(err&&err.message?err.message:err));
+  return false;
+ }
+}
+function busyBtn(id,busy,label){const b=document.getElementById(id);if(!b)return;b.disabled=!!busy;b.style.opacity=busy?.55:'';if(label)b.textContent=label;}
+document.getElementById('wavBtn').onclick=async()=>{
+ try{
+  busyBtn('wavBtn',true,'⏳ Ses işleniyor…');
+  const buf=await renderRing();if(!buf)return;
+  busyBtn('wavBtn',true,'⏳ Kodlanıyor…');
+  await new Promise(r=>setTimeout(r,30));
+  let blob=null;
+  try{blob=wavEncode(buf);}catch(err){infoErr('WAV kodlama hatası: '+(err&&err.message?err.message:err));return;}
+  if(!blob||blob.size<100){infoErr('WAV boş üretildi — tekrar Üret’e bas');return;}
+  busyBtn('wavBtn',true,'⏳ İndiriliyor…');
+  dlBlob(blob,'ringbell-'+Date.now()+'.wav');
+  toast('WAV indirildi ✔ ('+Math.round(blob.size/1024)+' KB)');
+ }finally{busyBtn('wavBtn',false,'⬇ WAV');}
+};
+document.getElementById('mp3Btn').onclick=async()=>{
+ try{
+  if(!ring){toast('Önce Zil Üret');return;}
+  if(typeof lamejs==='undefined'){toast('MP3 motoru yüklenemedi (internete bağlı mısın?) — WAV indir');return;}
+  busyBtn('mp3Btn',true,'⏳ Ses işleniyor…');
+  document.getElementById('mp3prog').style.width='25%';
+  const buf=await renderRing();if(!buf)return;
+  busyBtn('mp3Btn',true,'⏳ MP3 kodlanıyor…');
+  const c0=buf.getChannelData(0),c1=buf.numberOfChannels>1?buf.getChannelData(1):c0;
+  let enc=null;
+  try{enc=new lamejs.Mp3Encoder(2,buf.sampleRate,128);}catch(err){toast('MP3 başlatılamadı: '+(err&&err.message?err.message:err));return;}
+  const blk=1152,data=[];
+  for(let i=0;i<c0.length;i+=blk){
+   const l=new Int16Array(Math.min(blk,c0.length-i)),r=new Int16Array(Math.min(blk,c1.length-i));
+   for(let j=0;j<l.length;j++){l[j]=Math.max(-32768,Math.min(32767,c0[i+j]*32767));r[j]=Math.max(-32768,Math.min(32767,c1[i+j]*32767));}
+   const d=enc.encodeBuffer(l,r);if(d.length)data.push(new Uint8Array(d));
+   if(i%(blk*40)===0)await new Promise(rr=>setTimeout(rr,0));
+  }
+  const end=enc.flush();if(end.length)data.push(new Uint8Array(end));
+  document.getElementById('mp3prog').style.width='100%';
+  const blob=new Blob(data,{type:'audio/mp3'});
+  if(!data.length){toast('MP3 boş üretildi — tekrar dene');return;}
+  dlBlob(blob,'ringbell-'+Date.now()+'.mp3');
+  setTimeout(()=>document.getElementById('mp3prog').style.width='0',1200);
+  toast('MP3 indirildi ✔ ('+Math.round(blob.size/1024)+' KB)');
+ }finally{busyBtn('mp3Btn',false,'⬇ MP3');}
+};
+</script>
+</body>
+</html>
